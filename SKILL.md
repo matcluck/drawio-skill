@@ -90,9 +90,14 @@ for f in "icon1.png" "icon2.webp"; do
 done
 ```
 Replace `"icon1.png" "icon2.webp"` with the actual filenames the user selected. Do NOT scan all icons — only process selected ones.
+**Icon node style template:**
 ```
-style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=file:///<resolved-icon-dir>/<filename>;"
+style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=<bg-color>;html=1;verticalAlign=top;aspect=fixed;imageAspect=1;image=file:///<resolved-icon-dir>/<filename>;"
 ```
+- `html=1` — required for HTML label content to render (without it, tags appear as literal text)
+- `imageAspect=1` — preserves icon aspect ratio (0 stretches the image)
+- `labelBackgroundColor` — must match the **actual visual background at that position** (page bg for top-level nodes; group fill for nodes inside a coloured group). See STYLE-REFERENCE.md for colour rules.
+- **Dark icon visibility**: before using an icon on a dark background, check if the icon design is dark-coloured (e.g., Github.svg has a black logo). Look for a light-coloured variant in `assets/icons/` (e.g., `github-white-icon.webp`).
 
 ---
 

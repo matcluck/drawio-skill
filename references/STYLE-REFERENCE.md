@@ -72,6 +72,65 @@ python3 -c "import json; c=json.load(open('$HOME/.claude/skills/drawio/scripts/c
 - **Rounded corners** (`arcSize=24`) on process boxes for a modern feel.
 - **Muted detail text** uses `#64748B` (slate-500) for visual hierarchy without distraction.
 
+## XML Draw Order
+
+**Critical:** Elements defined later in XML render ON TOP of earlier elements.
+
+- **Define all edges BEFORE nodes** so node labels always render on top of edge lines.
+- If edges appear on top of node text in the rendered diagram, reorder so all `<mxCell edge="1">` elements come before all `<mxCell vertex="1">` elements.
+
+## labelBackgroundColor Rules
+
+`labelBackgroundColor` on icon nodes must match the **actual visual background at that position** — not just the page background.
+
+| Context | Correct value |
+|---------|--------------|
+| Light diagram | `#FFFFFF` |
+| Dark diagram (page bg `#0F172A`) | `#0F172A` |
+| Node inside a purple group (fill `#1A0F2E`) | `#1A0F2E` |
+| Node inside any coloured group | Match the group's fill colour |
+
+> ❌ Setting `labelBackgroundColor=#0F172A` on a node inside a `#1A0F2E` group creates a visible mismatched rectangle behind the label.
+
+This rule applies primarily to **icon nodes** whose labels render below the cell bounds. For process/start/end nodes the label is inside the shape and this matters less.
+
+## Dark Mode Icon Visibility
+
+Before using an icon in a dark mode diagram:
+
+1. Check if the icon uses a dark-coloured design (e.g., `Github.svg` has a black logo — invisible on dark backgrounds).
+2. Look for a light-coloured variant in `assets/icons/` (e.g., `github-white-icon.webp`).
+3. Use the light variant for dark backgrounds.
+
+## Edge Routing Pitfalls
+
+### Fan-out from a single node
+
+When one node connects to multiple children at the same level (fan-out), **do NOT use orthogonal edge style**. Orthogonal routing creates a horizontal bus segment at the source node's centre level that passes through sibling nodes.
+
+**Fix:** Use `edgeStyle=none;curved=1` for fan-out edges:
+```xml
+<mxCell style="edgeStyle=none;curved=1;html=1;strokeWidth=1.5;..." edge="1" source="root" target="child1" parent="1"/>
+```
+
+### Edges routing through unrelated nodes
+
+When an edge routes from A to C but passes through or near B:
+
+1. Reposition nodes to give the edge a clear path, OR
+2. Add explicit waypoints:
+```xml
+<mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;..." edge="1" source="a" target="c" parent="1">
+  <mxGeometry relative="1" as="geometry">
+    <Array as="points">
+      <mxPoint x="500" y="300"/>
+      <mxPoint x="700" y="300"/>
+    </Array>
+  </mxGeometry>
+</mxCell>
+```
+Choose waypoint coordinates that route the edge outside the bounding box of all intermediate nodes.
+
 ## When editing raw XML
 
 Every `mxCell` needs:

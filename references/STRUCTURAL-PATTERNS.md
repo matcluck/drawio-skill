@@ -161,3 +161,20 @@ Each node needs a `lane` field matching a lane ID. Define lanes in the `lanes` a
 | `title_bottom_margin` | 60px | Space below title before content |
 | `swimlane_header` | 44px | Height of lane label header |
 | `swimlane_padding` | 32px | Padding inside swimlane lanes |
+| `icon_label_overflow` | ~50px | Height below icon cell where label text renders (`verticalLabelPosition=bottom`) |
+
+## Group Box Sizing for Icon Nodes
+
+Icon nodes with `verticalLabelPosition=bottom` render their label **outside** the cell bounds, below the `height` value. A 3-line label overflows approximately 50px below the cell bottom.
+
+**Formula:**
+```
+node visual bottom = node_y + node_height + 50
+group bottom must be ≥ max(visual_bottom across all member nodes) + 40  (40px padding)
+```
+
+**Example:** Icon at `y=490, height=80` → visual bottom = 620. Group bottom must be ≥ 660.
+
+> ❌ Common mistake: sizing the group to `y + height` of the deepest icon node, which clips the label text hanging below.
+
+**Also align x correctly:** for icon nodes, `labelBackgroundColor` must match the group's fill colour (not the page background) — see STYLE-REFERENCE.md.

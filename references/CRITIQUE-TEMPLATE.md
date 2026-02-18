@@ -21,10 +21,13 @@ Use this template for each Ralph Loop iteration to systematically review the ren
 - Are there orphaned nodes with no edges?
 - Are all logical relationships represented?
 - Do edges connect to the correct source and target?
-- Are edges crossing through text labels? Fix by ensuring `labelBackgroundColor` is set to match the diagram background (e.g. `#FFFFFF` for light themes, `#1E1E1E` for dark themes)
+- Are edges crossing through text labels? Fix by ensuring `labelBackgroundColor` is set to match the **actual visual background at that position** (page bg for top-level nodes; group fill for nodes inside a coloured group — see STYLE-REFERENCE.md for colour rules)
 - Are edge labels legible and positioned clearly?
 - For branching paths, are edges labelled with the condition (Yes/No, Success/Fail)?
 - Are bidirectional relationships using the bidirectional edge style?
+- **Are edges defined BEFORE nodes in the XML?** Edges render behind node labels only when declared earlier in the XML. If arrows appear on top of labels, move all edge `<mxCell>` elements above all vertex `<mxCell>` elements.
+- **Do fan-out edges from a single source use `edgeStyle=none;curved=1`?** Orthogonal fan-out creates a horizontal bus segment at node level that routes through sibling nodes. Use curved style to avoid this.
+- **Do any edges route through unrelated nodes?** Check each edge path. Fix with explicit `<Array as="points">` waypoints to force routing around intermediate nodes.
 
 ## 4. Colour & Style Consistency
 - Are fill colours correct for each element type (check against config.json palette)?
@@ -65,3 +68,12 @@ Use this template for each Ralph Loop iteration to systematically review the ren
 | Nodes misaligned | Adjust x/y to align centres (x + width/2 should match) |
 | Too cramped | Increase spacing by adjusting node positions (+40px gaps) |
 | Group too tight | Increase group padding (gx - 48, gy - 72, gw + 96, gh + 72) |
+| Arrows render on top of labels | Move all edge mxCells before all vertex mxCells in XML |
+| Icon label shows HTML as literal text | Add `html=1;` to icon node style |
+| Icon aspect ratio distorted | Change `imageAspect=0` → `imageAspect=1` in icon node style |
+| Label background wrong colour inside group | Set `labelBackgroundColor` to group fill colour, not page bg |
+| Group clips icon labels | Icon labels overflow ~50px below cell; increase group height to cover `node_y + node_h + 50 + 40` |
+| Fan-out arrows routing through siblings | Change fan-out edges to `edgeStyle=none;curved=1` |
+| Edge routes through unrelated node | Add `<Array as="points">` waypoints to detour around the node |
+| Dark icon invisible on dark background | Use light-coloured icon variant (e.g., `github-white-icon.webp`) |
+| Child not centred under parent | Align: set child `x = parent_x + (parent_w - child_w) / 2` |
