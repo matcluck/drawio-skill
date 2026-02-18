@@ -109,6 +109,10 @@ You describe the diagram as **JSON** (nodes, edges, labels, types). The `generat
 ### Filename
 Name the file `<topic-slug>.drawio` (e.g., `ci-pipeline.drawio`, `network-architecture.drawio`).
 
+### Step 0: Review design principles
+
+Before writing any JSON, read [references/DESIGN-PRINCIPLES.md](references/DESIGN-PRINCIPLES.md) to inform aesthetic decisions — color semantics, edge routing, whitespace, labeling standards, and the diagram review checklist.
+
 ### Step 1: Choose a layout
 
 | Layout | Use for | How it arranges nodes |
@@ -207,7 +211,7 @@ All styles, dimensions, colours, and spacing live in [scripts/config.json](scrip
 
 ### When to edit raw XML directly
 
-Only edit the `.drawio` XML directly during **Ralph Loop refinement iterations** (Phase 4). For the initial generation, always use the JSON → script approach. When editing XML during refinement, read [scripts/config.json](scripts/config.json) directly for style strings — it is the single source of truth for all styles.
+Only edit the `.drawio` XML directly during **Ralph Loop refinement iterations** (Phase 4). For the initial generation, always use the JSON → script approach. When editing XML during refinement, read [scripts/config.json](scripts/config.json) for existing styles — it is the source of truth for defined styles. For attributes or shapes not covered by config.json, read [references/DRAWIO-STYLE-GUIDE.md](references/DRAWIO-STYLE-GUIDE.md).
 
 ---
 
