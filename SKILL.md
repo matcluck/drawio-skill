@@ -52,6 +52,27 @@ have confirmed the diagram scope with the user.
 
 ## Phase 1 — Requirements Gathering
 
+### Reference diagram (optional)
+
+If the user's command includes a path to an existing `.drawio` or `.xml` file as a reference (e.g. `/drawio ... use this as reference: path/to/diagram.drawio`), analyse it before proceeding:
+
+1. **Read the file** with the Read tool.
+2. **Extract patterns** — summarise what you observe:
+   - Layout direction (vertical, horizontal, branching)
+   - Node types and shapes used
+   - Colour scheme (light/dark, dominant palette colours)
+   - Grouping or swimlane patterns
+   - Edge styles (solid, dashed, curved, coloured)
+   - Typography and label conventions (detail text, icons)
+3. **Briefly tell the user** what you extracted: *"From your reference diagram I can see: [summary]. I'll match this style."*
+4. Carry these observations forward into Phase 2 — match the reference's layout choice, colour variant, edge style, grouping approach, and general aesthetic when writing the JSON. You do NOT need to replicate it exactly; use it as a style guide.
+
+If no reference diagram is mentioned, skip this section entirely.
+
+---
+
+### Gathering requirements
+
 If the user provided a detailed description with their `/drawio` command (e.g. `/drawio build me a system architecture with X, Y, Z connected like this...`), **skip the questions below**. Extract the answers from their description, check for icons, then go straight to the confirmation summary.
 
 Otherwise, ask these questions **one at a time**. Wait for the answer before asking the next.
@@ -62,7 +83,7 @@ Otherwise, ask these questions **one at a time**. Wait for the answer before ask
 4. **Detail level** — Brief overview or detailed (with commands, descriptions, tool references)?
 5. **Special requirements** — Specific colour scheme (light mode, dark mode)?
 
-After question 5 (or after extracting from a batch description), check if custom icons are available:
+After question 5 (or after extracting from a batch description), check if the user already indicated they don't want icons (e.g. "no icons", "without icons", "no custom icons"). If they did, **skip the icon check entirely**. Otherwise, check if custom icons are available:
 ```bash
 ls ~/.claude/skills/drawio/assets/icons/ 2>/dev/null | grep -v README.md
 ```
