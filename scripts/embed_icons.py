@@ -15,20 +15,40 @@ import mimetypes
 import re
 import shutil
 import sys
+import urllib.parse
 from pathlib import Path
 
 
 def embed_match(match: re.Match) -> str:
-    """Replace a file:/// URI with an inline base64 data URI."""
+    """Replace a file:/// URI with an inline data URI safe for draw.io style strings.
+
+    draw.io parses style strings by splitting on ';', so a bare data URI like
+    'data:image/png;base64,...' gets truncated at the first semicolon.  Fix:
+
+    - SVG: use URL-encoded text format ('data:image/svg+xml,<urlencoded>') — base64
+      SVG fails because '+' in base64 output can be misinterpreted.
+    - All other types: use base64 with the ';' before 'base64' percent-encoded
+      as '%3B' so the style parser never sees it as a property separator.
+    """
     path_str = match.group(1)
     p = Path(path_str)
     if not p.exists():
         print(f"  Warning: icon not found, skipping: {p}", file=sys.stderr)
         return match.group(0)
     mime = mimetypes.guess_type(str(p))[0] or "image/png"
-    b64 = base64.b64encode(p.read_bytes()).decode()
-    print(f"  Embedded: {p.name} ({mime}, {len(b64)} chars)")
-    return f"image=data:{mime};base64,{b64}"
+
+    if mime == "image/svg+xml":
+        # URL-encoded text: avoids base64's '+' and the ';base64' separator entirely
+        encoded = urllib.parse.quote(p.read_text(encoding="utf-8"), safe="")
+        data_uri = f"data:image/svg+xml,{encoded}"
+        print(f"  Embedded: {p.name} ({mime}, {len(encoded)} chars, url-encoded)")
+    else:
+        # Binary: base64 with ';' percent-encoded so draw.io's style parser is not confused
+        b64 = base64.b64encode(p.read_bytes()).decode()
+        data_uri = f"data:{mime}%3Bbase64,{b64}"
+        print(f"  Embedded: {p.name} ({mime}, {len(b64)} chars, base64)")
+
+    return f"image={data_uri}"
 
 
 def main() -> int:
@@ -46,7 +66,7 @@ def main() -> int:
     xml = input_path.read_text(encoding="utf-8")
 
     # Count file:/// icon references
-    refs = re.findall(r"image=file:///([^;\"]+)", xml)
+    refs = re.findall(r"image=file:///(/[^;\"]+)", xml)
     if not refs:
         print("No file:/// icon references found — nothing to embed.")
         return 0
@@ -54,7 +74,7 @@ def main() -> int:
     print(f"Found {len(refs)} icon reference(s) to embed:")
 
     # Replace all file:/// URIs with base64 data URIs
-    result = re.sub(r"image=file:///([^;\"]+)", embed_match, xml)
+    result = re.sub(r"image=file:///(/[^;\"]+)", embed_match, xml)
 
     # Write output
     output_path = args.output.resolve() if args.output else input_path

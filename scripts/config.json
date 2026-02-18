@@ -1,0 +1,161 @@
+{
+  "page": {
+    "width": 1600,
+    "content_left": 100,
+    "content_right": 1500
+  },
+  "spacing": {
+    "v_gap": 120,
+    "h_gap": 80,
+    "group_padding": 48,
+    "min_edge_gap": 40,
+    "title_bottom_margin": 60,
+    "swimlane_header": 44,
+    "swimlane_padding": 32
+  },
+  "dimensions": {
+    "start":      [140, 44],
+    "end":        [140, 44],
+    "process":    [260, 56],
+    "decision":   [200, 120],
+    "note":       [240, 80],
+    "icon":       [80, 80],
+    "dark_panel": [260, 56],
+    "success":    [260, 56],
+    "data_store": [260, 50],
+    "actor":      [60, 80],
+    "cylinder":   [120, 80],
+    "cloud":      [200, 100],
+    "detail_extra_height": 24
+  },
+  "colors": {
+    "palette": {
+      "blue_fill":     "#DBEAFE",
+      "blue_stroke":   "#3B82F6",
+      "green_fill":    "#D1FAE5",
+      "green_stroke":  "#10B981",
+      "orange_fill":   "#FEF3C7",
+      "orange_stroke": "#F59E0B",
+      "purple_fill":   "#EDE9FE",
+      "purple_stroke": "#8B5CF6",
+      "red_fill":      "#FFE4E6",
+      "red_stroke":    "#F43F5E",
+      "yellow_fill":   "#FEF9C3",
+      "yellow_stroke": "#EAB308",
+      "grey_fill":     "#F1F5F9",
+      "grey_stroke":   "#94A3B8",
+      "cyan_fill":     "#CFFAFE",
+      "cyan_stroke":   "#06B6D4",
+      "slate_800":     "#1E293B",
+      "white":         "#FFFFFF",
+      "slate_900":     "#0F172A",
+      "slate_200":     "#E2E8F0",
+      "slate_400":     "#94A3B8",
+      "slate_50":      "#F8FAFC"
+    },
+    "edges": {
+      "green":  "#10B981",
+      "orange": "#F59E0B",
+      "blue":   "#3B82F6",
+      "red":    "#F43F5E",
+      "purple": "#8B5CF6",
+      "grey":   "#94A3B8"
+    },
+    "detail_text": "#64748B"
+  },
+  "styles": {
+    "title": "text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;fontColor=#1E293B;fontFamily=Helvetica;",
+    "subtitle": "text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#94A3B8;fontFamily=Helvetica;",
+
+    "start": "shape=ellipse;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#1E293B;fontSize=13;fontColor=#FFFFFF;fontStyle=1;fontFamily=Helvetica;shadow=0;",
+    "end":   "shape=ellipse;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#1E293B;fontSize=13;fontColor=#FFFFFF;fontStyle=1;fontFamily=Helvetica;shadow=0;",
+
+    "process_primary":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#DBEAFE;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+    "process_secondary": "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#D1FAE5;strokeColor=#10B981;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+    "process_accent":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#EDE9FE;strokeColor=#8B5CF6;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+    "process_warning":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#FEF3C7;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+    "process_danger":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#FFE4E6;strokeColor=#F43F5E;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+    "process_neutral":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#F1F5F9;strokeColor=#94A3B8;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+
+    "decision": "shape=rhombus;whiteSpace=wrap;html=1;rounded=1;fillColor=#FEF3C7;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontFamily=Helvetica;shadow=0;",
+    "note":     "shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#FEF9C3;strokeColor=#EAB308;strokeWidth=1;fontSize=11;fontColor=#64748B;fontFamily=Helvetica;verticalAlign=middle;shadow=0;",
+
+    "dark_panel": "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#1E293B;strokeColor=#334155;strokeWidth=1.5;fontSize=12;fontColor=#E2E8F0;fontFamily=Courier New;verticalAlign=middle;align=center;shadow=0;",
+    "success":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#D1FAE5;strokeColor=#10B981;strokeWidth=1.5;fontSize=13;fontStyle=1;fontColor=#065F46;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+
+    "data_store": "shape=mxgraph.dfd.dataStoreID;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=12;fontColor=#1E293B;fontFamily=Helvetica;align=center;",
+    "cylinder":   "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DBEAFE;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=12;fontColor=#1E293B;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+    "cloud":      "shape=cloud;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#94A3B8;strokeWidth=1.5;fontSize=12;fontColor=#1E293B;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+    "actor":      "shape=mxgraph.basic.person;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;fontColor=#1E293B;fontFamily=Helvetica;",
+
+    "junction": "shape=ellipse;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#1E293B;",
+
+    "swimlane": "swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#F8FAFC;strokeColor=#E2E8F0;strokeWidth=1.5;fontSize=13;fontColor=#1E293B;fontFamily=Helvetica;rounded=1;arcSize=8;",
+    "swimlane_row": "swimlane;fontStyle=0;align=center;verticalAlign=top;startSize=28;horizontal=1;fillColor=none;strokeColor=#E2E8F0;strokeWidth=1;fontSize=11;fontColor=#64748B;fontFamily=Helvetica;collapsible=0;",
+
+    "edge_solid":         "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#94A3B8;fontColor=#64748B;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;",
+    "edge_curved":        "edgeStyle=none;curved=1;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#94A3B8;fontColor=#64748B;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;",
+    "edge_dashed":        "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#94A3B8;dashed=1;dashPattern=8 4;fontColor=#64748B;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;",
+    "edge_dotted":        "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#CBD5E1;dashed=1;dashPattern=2 4;fontColor=#64748B;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;",
+    "edge_bidirectional": "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#94A3B8;startArrow=classic;startFill=1;fontColor=#64748B;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;",
+
+    "group": "rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fontColor=#475569;fontFamily=Helvetica;verticalAlign=top;spacingTop=10;fillColor=#F8FAFC;opacity=50;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;dashPattern=6 4;arcSize=12;shadow=0;",
+
+    "icon_base": "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;html=1;fontSize=11;fontColor=#1E293B;fontFamily=Helvetica;"
+  },
+
+  "dark": {
+    "background": "#0F172A",
+    "colors": {
+      "edges": {
+        "green":  "#10B981",
+        "orange": "#F59E0B",
+        "blue":   "#3B82F6",
+        "red":    "#F43F5E",
+        "purple": "#8B5CF6",
+        "grey":   "#94A3B8"
+      },
+      "detail_text": "#94A3B8"
+    },
+    "styles": {
+      "title": "text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;fontColor=#F1F5F9;fontFamily=Helvetica;",
+      "subtitle": "text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#64748B;fontFamily=Helvetica;",
+
+      "start": "shape=ellipse;whiteSpace=wrap;html=1;fillColor=#334155;strokeColor=#64748B;fontSize=13;fontColor=#F1F5F9;fontStyle=1;fontFamily=Helvetica;shadow=0;",
+      "end":   "shape=ellipse;whiteSpace=wrap;html=1;fillColor=#334155;strokeColor=#64748B;fontSize=13;fontColor=#F1F5F9;fontStyle=1;fontFamily=Helvetica;shadow=0;",
+
+      "process_primary":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#1E3A5F;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "process_secondary": "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#064E3B;strokeColor=#10B981;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "process_accent":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#4C1D95;strokeColor=#8B5CF6;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "process_warning":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#78350F;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "process_danger":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#881337;strokeColor=#F43F5E;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "process_neutral":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#334155;strokeColor=#64748B;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+
+      "decision": "shape=rhombus;whiteSpace=wrap;html=1;rounded=1;fillColor=#78350F;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontFamily=Helvetica;shadow=0;",
+      "note":     "shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#713F12;strokeColor=#EAB308;strokeWidth=1;fontSize=11;fontColor=#CBD5E1;fontFamily=Helvetica;verticalAlign=middle;shadow=0;",
+
+      "dark_panel": "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#0F172A;strokeColor=#475569;strokeWidth=1.5;fontSize=12;fontColor=#E2E8F0;fontFamily=Courier New;verticalAlign=middle;align=center;shadow=0;",
+      "success":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#064E3B;strokeColor=#10B981;strokeWidth=1.5;fontSize=13;fontStyle=1;fontColor=#D1FAE5;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+
+      "data_store": "shape=mxgraph.dfd.dataStoreID;whiteSpace=wrap;html=1;fillColor=#78350F;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=12;fontColor=#E2E8F0;fontFamily=Helvetica;align=center;",
+      "cylinder":   "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1E3A5F;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=12;fontColor=#E2E8F0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "cloud":      "shape=cloud;whiteSpace=wrap;html=1;fillColor=#334155;strokeColor=#64748B;strokeWidth=1.5;fontSize=12;fontColor=#E2E8F0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "actor":      "shape=mxgraph.basic.person;whiteSpace=wrap;html=1;fillColor=#1E3A5F;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;fontColor=#E2E8F0;fontFamily=Helvetica;",
+
+      "junction": "shape=ellipse;whiteSpace=wrap;html=1;fillColor=#64748B;strokeColor=#94A3B8;",
+
+      "swimlane": "swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#1E293B;strokeColor=#334155;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontFamily=Helvetica;rounded=1;arcSize=8;",
+      "swimlane_row": "swimlane;fontStyle=0;align=center;verticalAlign=top;startSize=28;horizontal=1;fillColor=none;strokeColor=#334155;strokeWidth=1;fontSize=11;fontColor=#94A3B8;fontFamily=Helvetica;collapsible=0;",
+
+      "edge_solid":         "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#64748B;fontColor=#94A3B8;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0F172A;",
+      "edge_curved":        "edgeStyle=none;curved=1;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#64748B;fontColor=#94A3B8;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0F172A;",
+      "edge_dashed":        "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#64748B;dashed=1;dashPattern=8 4;fontColor=#94A3B8;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0F172A;",
+      "edge_dotted":        "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#475569;dashed=1;dashPattern=2 4;fontColor=#94A3B8;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0F172A;",
+      "edge_bidirectional": "edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#64748B;startArrow=classic;startFill=1;fontColor=#94A3B8;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0F172A;",
+
+      "group": "rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fontColor=#94A3B8;fontFamily=Helvetica;verticalAlign=top;spacingTop=10;fillColor=#1E293B;opacity=50;strokeColor=#475569;strokeWidth=1.5;dashed=1;dashPattern=6 4;arcSize=12;shadow=0;",
+
+      "icon_base": "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;aspect=fixed;imageAspect=0;html=1;fontSize=11;fontColor=#E2E8F0;fontFamily=Helvetica;"
+    }
+  }
+}

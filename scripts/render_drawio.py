@@ -3,7 +3,7 @@
 render_drawio.py — Render a .drawio file to PNG using the draw.io desktop CLI.
 
 Usage:
-    python render_drawio.py <input.drawio> [--output output.png]
+    python render_drawio.py <input.drawio> [--output output.png] [--scale 2] [--border 20]
 
 Requirements:
     - drawio desktop CLI on PATH  (snap install drawio  OR  download AppImage)
@@ -26,12 +26,15 @@ def default_output_path(input_path: Path, explicit: Path = None) -> Path:
     return input_path.with_suffix(".png")
 
 
-def build_command(input_path: Path, output_path: Path, xvfb_available: bool) -> list[str]:
+def build_command(input_path: Path, output_path: Path, xvfb_available: bool,
+                  scale: float = 2, border: int = 20) -> list[str]:
     """Build the shell command list to invoke draw.io export."""
     drawio_args = [
         "drawio",
         "--export",
         "--format", "png",
+        "--scale", str(scale),
+        "--border", str(border),
         "--output", str(output_path),
         str(input_path),
     ]
@@ -44,6 +47,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Render a .drawio file to PNG.")
     parser.add_argument("input", type=Path, help="Path to the .drawio input file")
     parser.add_argument("--output", type=Path, default=None, help="Output PNG path")
+    parser.add_argument("--scale", type=float, default=2,
+                        help="Export scale factor (default: 2 for crisp rendering)")
+    parser.add_argument("--border", type=int, default=20,
+                        help="Border padding in pixels (default: 20)")
     args = parser.parse_args()
 
     input_path: Path = args.input.resolve()
@@ -68,7 +75,8 @@ def main() -> int:
     output_path = default_output_path(input_path, resolved_output)
     xvfb_available = shutil.which("xvfb-run") is not None
 
-    cmd = build_command(input_path, output_path, xvfb_available)
+    cmd = build_command(input_path, output_path, xvfb_available,
+                        scale=args.scale, border=args.border)
 
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)

@@ -1,116 +1,82 @@
-# Draw.io Element & Edge Style Reference
+# Style Reference
 
-**All cells use `parent="1"` and `vertex="1"` (nodes) or `edge="1"` (edges).**
+**Source of truth: [`scripts/config.json`](../scripts/config.json)**
 
-These are common element styles to use as a starting point. Choose and adapt the styles that fit your diagram type — not every diagram needs every element.
+All styles, colours, dimensions, and spacing are defined in config.json. The `generate_drawio.py` script reads from it automatically. During Ralph Loop XML editing, read config.json directly to look up style strings.
 
-## Colour Palette
+## Quick reference
 
-| Colour | Hex | Used for |
-|--------|-----|----------|
-| Dark teal | `#264653` | Start/end nodes, junction points, primary box stroke |
-| White | `#FFFFFF` | Start/end node text |
-| Light blue | `#D6E4F0` | Primary box fill |
-| Medium blue | `#c9daf8` | Secondary box fill |
-| Slate blue | `#3d5a80` | Secondary box stroke |
-| Light red | `#f4cccc` | Accent box fill |
-| Dark red | `#6a040f` | Accent box stroke |
-| Light green | `#d5e8d4` | Success/output box fill |
-| Green | `#82b366` | Success/output box stroke |
-| Orange | `#FF6B35` | Decision diamond fill |
-| Dark orange | `#CC5529` | Decision diamond stroke |
-| Pale yellow | `#fff3cd` | Note fill |
-| Yellow | `#ffc107` | Note stroke, warning edges |
-| Charcoal | `#2d2d2d` | Dark panel fill |
-| Grey | `#555555` | Dark panel stroke, secondary edges |
-| Light grey | `#e0e0e0` | Dark panel text |
-| Edge green | `#77AB94` | Coloured edge |
-| Edge orange | `#FFCE9F` | Coloured edge |
-| Edge blue | `#ADD8E6` | Coloured edge |
-| Edge red | `#dc3545` | Coloured edge |
-
-## Element Styles
-
-### Title
-```
-style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=36;fontStyle=1"
-```
-- y="20", width="1400", height="50", centred on canvas
-
-### Start / End Nodes (ellipses)
-```
-style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;fontSize=12;fontColor=#FFFFFF;fontStyle=1;"
-```
-- START: ~180×80. END: ~170×70
-
-### Rounded Boxes (general-purpose containers)
-
-**Primary (light blue)**
-```
-style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;"
+Run this to dump all available styles:
+```bash
+python3 -c "import json; c=json.load(open('$HOME/.claude/skills/drawio/scripts/config.json')); [print(f'{k}: {v}') for k,v in c['styles'].items()]"
 ```
 
-**Secondary (medium blue)**
-```
-style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9daf8;strokeColor=#3d5a80;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;"
-```
+## Colour Palette (Tailwind-inspired)
 
-**Accent (light red)**
-```
-style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4cccc;strokeColor=#6a040f;fontSize=11;verticalAlign=middle;align=center;"
-```
+| Name | Fill | Stroke | Use |
+|------|------|--------|-----|
+| Blue | `#DBEAFE` | `#3B82F6` | Primary flow, default processes |
+| Green | `#D1FAE5` | `#10B981` | Success, secondary steps |
+| Orange | `#FEF3C7` | `#F59E0B` | Warnings, decisions, data stores |
+| Purple | `#EDE9FE` | `#8B5CF6` | Accents, highlighted steps |
+| Red | `#FFE4E6` | `#F43F5E` | Errors, danger, critical paths |
+| Yellow | `#FEF9C3` | `#EAB308` | Notes, annotations |
+| Grey | `#F1F5F9` | `#94A3B8` | Neutral, optional, clouds |
+| Cyan | `#CFFAFE` | `#06B6D4` | Info, data flow |
+| Slate 800 | — | `#1E293B` | Dark fills (start/end, dark panels) |
 
-**Success / output (green)**
-```
-style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1"
-```
+## Edge Colours
 
-### Decision Diamonds
-```
-style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#FF6B35;strokeColor=#CC5529;fontSize=9;"
-```
+| Name | Hex | Use |
+|------|-----|-----|
+| Green | `#10B981` | Success paths, happy flow |
+| Orange | `#F59E0B` | Conditional, warning paths |
+| Blue | `#3B82F6` | Data flow, info transfer |
+| Red | `#F43F5E` | Error paths, failures |
+| Purple | `#8B5CF6` | Async, event-driven |
+| Grey | `#94A3B8` | Default (no semantic colour) |
 
-### Notes (yellow sticky)
-```
-style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff3cd;strokeColor=#ffc107;fontSize=10;verticalAlign=middle;"
-```
+## Typography Hierarchy
 
-### Dark Panel
-```
-style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2d2d2d;strokeColor=#555555;fontSize=9;verticalAlign=top;spacingTop=5;spacingLeft=8;"
-```
-- Font colour #e0e0e0
+| Element | Size | Weight | Colour | Font |
+|---------|------|--------|--------|------|
+| Title | 24px | Bold | `#1E293B` | Helvetica |
+| Subtitle | 13px | Normal | `#94A3B8` | Helvetica |
+| Node label | 13px | Normal | `#1E293B` | Helvetica |
+| Node detail | 10px | Normal | `#64748B` | Helvetica |
+| Edge label | 11px | Normal | `#64748B` | Helvetica |
+| Note text | 11px | Normal | `#64748B` | Helvetica |
+| Dark panel | 12px | Normal | `#E2E8F0` | Courier New |
 
-### Small Junction Points (ellipses)
-```
-style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;"
-```
-- 20×20 — use where edges split or merge
+## Node Dimensions
 
-## Edge Styles
+| Type | Width × Height | Notes |
+|------|---------------|-------|
+| start / end | 140 × 44 | Dark ellipse |
+| process | 260 × 56 | Rounded rectangle (+24px with detail) |
+| decision | 200 × 120 | Diamond |
+| note | 240 × 80 | Sticky note shape |
+| icon | 80 × 80 | Custom image |
+| dark_panel | 260 × 56 | Code/terminal block |
+| success | 260 × 56 | Green highlighted box |
+| data_store | 260 × 50 | DFD data store |
+| cylinder | 120 × 80 | Database cylinder |
+| cloud | 200 × 100 | Cloud shape |
+| actor | 60 × 80 | Person silhouette |
 
-### Standard flow
-```
-style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;"
-```
+## Design Principles
 
-### Coloured edges
-```
-style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;curved=0;strokeColor=#77AB94;"
-```
-Colour options:
-- Green: `strokeColor=#77AB94`
-- Orange: `strokeColor=#FFCE9F`
-- Blue: `strokeColor=#ADD8E6`
-- Red: `strokeColor=#dc3545`
+- **No shadows** — clean, flat aesthetic. Shadow=0 on all elements.
+- **1.5px strokes** — consistent border weight across all shapes and edges.
+- **White label backgrounds** on edges (`labelBackgroundColor=#FFFFFF`) to prevent text-on-line overlap.
+- **Rounded corners** (`arcSize=24`) on process boxes for a modern feel.
+- **Muted detail text** uses `#64748B` (slate-500) for visual hierarchy without distraction.
 
-### Dashed edges
-```
-style="dashed=1;strokeColor=#ffc107;strokeWidth=1;"   (warning/attention)
-style="dashed=1;strokeColor=#555555;strokeWidth=1;"   (secondary/info)
-```
+## When editing raw XML
 
-## Text Labels
-```
-style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;"
-```
+Every `mxCell` needs:
+- `parent="1"`
+- `vertex="1"` (nodes) or `edge="1"` (edges)
+- Edges need `source` and `target` referencing valid node IDs
+
+When adding styles manually, always copy from config.json to maintain consistency. Do not invent new colour values — use the palette above.

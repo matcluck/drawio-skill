@@ -1,6 +1,6 @@
 ---
 name: drawio
-description: Use when the user wants to create a draw.io diagram. Guides requirements gathering, generates valid draw.io XML, renders to PNG, then runs 5 Ralph Loop critique/refine cycles to progressively improve the diagram. Works for any diagram type.
+description: Use when the user wants to create a draw.io diagram. Guides requirements gathering, generates valid draw.io XML, renders to PNG, then runs 3 Ralph Loop critique/refine cycles (override with --max-iterations N). Works for any diagram type.
 compatibility: Requires drawio desktop, python3, xmllint, xvfb, and imagemagick (convert).
 metadata:
   author: Matcluck
@@ -52,7 +52,9 @@ have confirmed the diagram scope with the user.
 
 ## Phase 1 — Requirements Gathering
 
-Ask these questions **one at a time**. Wait for the answer before asking the next.
+If the user provided a detailed description with their `/drawio` command (e.g. `/drawio build me a system architecture with X, Y, Z connected like this...`), **skip the questions below**. Extract the answers from their description, check for icons, then go straight to the confirmation summary.
+
+Otherwise, ask these questions **one at a time**. Wait for the answer before asking the next.
 
 1. **Diagram type** — What kind of diagram is this? (system architecture, workflow/flowchart, org chart, network topology, ER/data model, other?)
 2. **Components** — What are the main entities, services, or steps? List them.
@@ -60,7 +62,7 @@ Ask these questions **one at a time**. Wait for the answer before asking the nex
 4. **Detail level** — Brief overview or detailed (with commands, descriptions, tool references)?
 5. **Special requirements** — Specific colour scheme (light mode, dark mode)?
 
-After question 5, check if custom icons are available:
+After question 5 (or after extracting from a batch description), check if custom icons are available:
 ```bash
 ls ~/.claude/skills/drawio/assets/icons/ 2>/dev/null | grep -v README.md
 ```
@@ -94,191 +96,140 @@ style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;ver
 
 ---
 
-## Phase 2 — Generate the .drawio XML
+## Phase 2 — Generate the Diagram
 
-### Progress Updates
-**IMPORTANT:** XML generation involves heavy thinking. Keep the user informed so they don't think things are frozen:
-- Before reading references: *"Reading style and structural references..."*
-- Before generating XML: *"Generating diagram XML — this may take a minute for complex diagrams, hang tight."*
-- After writing the file: *"XML written. Validating..."*
-
-Output these messages as plain text **before** the tool call or thinking block that follows. Never go silent for more than one tool call without a status update.
+### How it works
+You describe the diagram as **JSON** (nodes, edges, labels, types). The `generate_drawio.py` script handles all coordinate math, spacing, and style application from `config.json`. **Do NOT write raw XML yourself** — let the script do it.
 
 ### Filename
 Name the file `<topic-slug>.drawio` (e.g., `ci-pipeline.drawio`, `network-architecture.drawio`).
 
-### XML Boilerplate
-Every diagram starts with this exact structure:
+### Step 1: Choose a layout
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- 🐔 matcluck's drawio-skill | github.com/matcluck -->
-<mxfile host="app.diagrams.net" agent="matcluck/drawio-skill">
-<diagram name="Page-1" id="REPLACE-WITH-UNIQUE-ID">
-<mxGraphModel dx="800" dy="400" grid="1" gridSize="10" guides="1" tooltips="1"
-  connect="1" arrows="1" fold="1" page="1" pageScale="1"
-  pageWidth="1600" pageHeight="3400" math="0" shadow="0">
-<root>
-<mxCell id="0" />
-<mxCell id="1" parent="0" />
-<!-- ALL CONTENT HERE -->
-</root>
-</mxGraphModel>
-</diagram>
-</mxfile>
+| Layout | Use for | How it arranges nodes |
+|--------|---------|----------------------|
+| `linear` | Flowcharts, pipelines, sequential processes | Vertical stack, centred |
+| `horizontal` | Timelines, left-to-right pipelines | Single row, left to right |
+| `branching` | Decision trees, parallel workflows, fan-out/fan-in | BFS levels, siblings side by side |
+| `hierarchical` | Org charts, taxonomies, tree structures | Same as branching (tree-aware) |
+| `grid` | Dashboards, card layouts, inventories | Rows and columns (set `grid_columns`) |
+| `swimlane` | BPMN, cross-team processes | Horizontal lanes (set `lanes` array, nodes need `lane` field) |
+
+See [references/STRUCTURAL-PATTERNS.md](references/STRUCTURAL-PATTERNS.md) for visual examples of each layout.
+
+### Step 2: Write the JSON
+
+Create a JSON object with the diagram structure. Write it to `<topic-slug>.json` using the Write tool.
+
+**Node types** (each gets automatic styling from config.json):
+| Type | Visual | Use for |
+|------|--------|---------|
+| `start` | Dark slate ellipse | Entry points |
+| `end` | Dark slate ellipse | Exit points |
+| `process` | Rounded box | General steps (variants below) |
+| `decision` | Yellow diamond | Branch/decision points |
+| `note` | Yellow sticky | Annotations |
+| `success` | Green box | Success/output states |
+| `dark_panel` | Dark box, light text | Terminal/code blocks |
+| `data_store` | DFD data store | Databases, storage |
+| `cylinder` | 3D cylinder | Databases (alt visual) |
+| `cloud` | Cloud shape | External services, cloud infra |
+| `actor` | Person shape | Users, roles |
+| `icon` | Custom image | Requires `icon` field with `file:///` path |
+
+**Process variants** (`variant` field on `process` nodes):
+| Variant | Colour | Semantic use |
+|---------|--------|-------------|
+| `primary` | Blue | Default, main flow |
+| `secondary` | Green | Supporting steps |
+| `accent` | Purple | Highlighted steps |
+| `warning` | Orange | Caution, external deps |
+| `danger` | Red | Errors, critical paths |
+| `neutral` | Grey | Background, optional |
+
+**Edge options:**
+- `style`: `"solid"` (default), `"curved"`, `"dashed"`, `"dotted"`, `"bidirectional"`
+- `color`: `"green"`, `"orange"`, `"blue"`, `"red"`, `"purple"`, `"grey"` (optional)
+- `label`: edge label text (optional)
+
+**Groups** (optional): wrap related nodes in a shaded background box with a label.
+
+**Swimlane-specific fields:**
+- `lanes`: array of `{"id": "...", "label": "...", "color": "#hex"}` objects
+- Each node needs a `lane` field matching a lane `id`
+
+**Theme** (optional):
+- `"theme": "light"` (default) or `"theme": "dark"` — dark mode uses a `#0F172A` background with adjusted fills, strokes, and text colours from the `dark` section of config.json. Set this when the user requests dark mode.
+
+**Title and subtitle** (optional):
+- `title`: Main heading (24px bold, centred)
+- `subtitle`: Secondary text below title (13px muted, centred)
+
+**Example JSON (linear):**
+```json
+{
+  "title": "CI Pipeline",
+  "subtitle": "Automated build and deploy workflow",
+  "layout": "linear",
+  "nodes": [
+    {"id": "n1", "label": "Push Code", "type": "start"},
+    {"id": "n2", "label": "Run Tests", "type": "process", "detail": "pytest + coverage"},
+    {"id": "n3", "label": "Build Image", "type": "process", "variant": "secondary"},
+    {"id": "n4", "label": "Deploy", "type": "success"},
+    {"id": "n5", "label": "Done", "type": "end"}
+  ],
+  "edges": [
+    {"from": "n1", "to": "n2"},
+    {"from": "n2", "to": "n3"},
+    {"from": "n3", "to": "n4"},
+    {"from": "n4", "to": "n5"}
+  ]
+}
 ```
 
-- `pageWidth="1600"` always. Content spans ~100px to ~1500px
-- `pageHeight` — adjust to fit content. Guide: ~800 for simple (< 10 nodes), ~1600 for medium, ~2400–4200 for large/complex diagrams. The boilerplate uses 3400 as a starting point; shrink or grow as needed
-- **Spacing:** 40–60px horizontal gap between sibling elements, 80–120px vertical gap between levels
-- **Flow direction:** top to bottom
-- Generate a random UUID-style unique ID for the diagram `id` attribute
-
-### Writing Large XML Files
-For large diagrams (> 40 mxCell elements), write XML incrementally using bash heredoc append to prevent corruption:
+### Step 3: Generate the .drawio file
 
 ```bash
-# Write boilerplate first
-cat > diagram.drawio << 'XMLEOF'
-<?xml version="1.0" encoding="UTF-8"?>
-...opening tags...
-XMLEOF
-
-# Append each chunk
-cat >> diagram.drawio << 'XMLEOF'
-<!-- chunk 1: ~40-60 mxCell elements -->
-XMLEOF
-
-cat >> diagram.drawio << 'XMLEOF'
-<!-- chunk 2 -->
-XMLEOF
-
-# Append closing tags last
-cat >> diagram.drawio << 'XMLEOF'
-</root></mxGraphModel></diagram></mxfile>
-XMLEOF
+python3 ~/.claude/skills/drawio/scripts/generate_drawio.py <topic-slug>.json --output <topic-slug>.drawio
+xmllint --noout <topic-slug>.drawio && echo "Valid XML" || echo "XML ERROR"
 ```
 
-### Element & Edge Style Reference
+The script computes all coordinates, applies styles from `config.json`, and outputs valid `.drawio` XML. If `xmllint` fails, check the JSON for issues and regenerate.
 
-Read [references/STYLE-REFERENCE.md](references/STYLE-REFERENCE.md) for all element styles (nodes, edges, section headers, colours). Load it before generating any XML.
+### Styles and layout config
 
-### Layout & Structural Patterns
+All styles, dimensions, colours, and spacing live in [scripts/config.json](scripts/config.json). To change the look of generated diagrams, edit config.json — do NOT hardcode styles in the JSON input or in raw XML.
 
-Read [references/STRUCTURAL-PATTERNS.md](references/STRUCTURAL-PATTERNS.md) for diagram patterns (linear, branching, hierarchical) by diagram type.
+### When to edit raw XML directly
 
-### Starter Templates
-
-Use these pre-positioned skeletons to avoid computing coordinates from scratch. Replace labels/IDs, add/remove rows as needed, and extend the y-axis for more nodes.
-
-**Linear (flowcharts, pipelines) — 5 steps top-to-bottom:**
-```xml
-<!-- Title -->
-<mxCell id="t1" value="TITLE" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=36;fontStyle=1" vertex="1" parent="1"><mxGeometry x="100" y="20" width="1400" height="50" as="geometry"/></mxCell>
-<!-- START -->
-<mxCell id="n1" value="START" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;fontSize=12;fontColor=#FFFFFF;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="710" y="100" width="180" height="80" as="geometry"/></mxCell>
-<!-- Step 1 -->
-<mxCell id="n2" value="Step 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="650" y="280" width="300" height="60" as="geometry"/></mxCell>
-<mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="n1" target="n2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Step 2 -->
-<mxCell id="n3" value="Step 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="650" y="440" width="300" height="60" as="geometry"/></mxCell>
-<mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="n2" target="n3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Step 3 -->
-<mxCell id="n4" value="Step 3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="650" y="600" width="300" height="60" as="geometry"/></mxCell>
-<mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="n3" target="n4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- END -->
-<mxCell id="n5" value="END" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;fontSize=12;fontColor=#FFFFFF;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="720" y="760" width="170" height="70" as="geometry"/></mxCell>
-<mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="n4" target="n5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-```
-Y-spacing: 160px per step. To add more steps, continue at y+160 and shift END down.
-
-**Branching (3-way split and merge):**
-```xml
-<!-- Title -->
-<mxCell id="t1" value="TITLE" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=36;fontStyle=1" vertex="1" parent="1"><mxGeometry x="100" y="20" width="1400" height="50" as="geometry"/></mxCell>
-<!-- START -->
-<mxCell id="n1" value="START" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;fontSize=12;fontColor=#FFFFFF;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="710" y="100" width="180" height="80" as="geometry"/></mxCell>
-<!-- Split junction -->
-<mxCell id="j1" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;" vertex="1" parent="1"><mxGeometry x="790" y="260" width="20" height="20" as="geometry"/></mxCell>
-<mxCell id="e0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="n1" target="j1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Branch A (left) -->
-<mxCell id="bA" value="Branch A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="250" y="360" width="280" height="60" as="geometry"/></mxCell>
-<mxCell id="eA" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="j1" target="bA" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Branch B (centre) -->
-<mxCell id="bB" value="Branch B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9daf8;strokeColor=#3d5a80;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="660" y="360" width="280" height="60" as="geometry"/></mxCell>
-<mxCell id="eB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="j1" target="bB" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Branch C (right) -->
-<mxCell id="bC" value="Branch C" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4cccc;strokeColor=#6a040f;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1"><mxGeometry x="1070" y="360" width="280" height="60" as="geometry"/></mxCell>
-<mxCell id="eC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="j1" target="bC" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Merge junction -->
-<mxCell id="j2" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;" vertex="1" parent="1"><mxGeometry x="790" y="500" width="20" height="20" as="geometry"/></mxCell>
-<mxCell id="emA" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="bA" target="j2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<mxCell id="emB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="bB" target="j2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<mxCell id="emC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="bC" target="j2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- END -->
-<mxCell id="n5" value="END" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;fontSize=12;fontColor=#FFFFFF;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="720" y="600" width="170" height="70" as="geometry"/></mxCell>
-<mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="j2" target="n5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-```
-Branch x-positions: 250, 660, 1070 (410px apart). For 2 branches use 400 and 860. For 4+ branches, space evenly across 200–1400.
-
-**Hierarchical (org charts, taxonomies) — root + 3 children + 4 grandchildren:**
-```xml
-<!-- Title -->
-<mxCell id="t1" value="TITLE" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=36;fontStyle=1" vertex="1" parent="1"><mxGeometry x="100" y="20" width="1400" height="50" as="geometry"/></mxCell>
-<!-- Root -->
-<mxCell id="r1" value="Root" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#264653;strokeColor=#264653;fontSize=13;fontColor=#FFFFFF;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="650" y="100" width="300" height="60" as="geometry"/></mxCell>
-<!-- Child A -->
-<mxCell id="cA" value="Child A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="170" y="260" width="280" height="60" as="geometry"/></mxCell>
-<mxCell id="erA" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="r1" target="cA" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Child B -->
-<mxCell id="cB" value="Child B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="660" y="260" width="280" height="60" as="geometry"/></mxCell>
-<mxCell id="erB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="r1" target="cB" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Child C -->
-<mxCell id="cC" value="Child C" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6E4F0;strokeColor=#264653;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="1150" y="260" width="280" height="60" as="geometry"/></mxCell>
-<mxCell id="erC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="r1" target="cC" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Grandchild A1 -->
-<mxCell id="gA1" value="A1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9daf8;strokeColor=#3d5a80;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="80" y="420" width="220" height="50" as="geometry"/></mxCell>
-<mxCell id="eA1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="cA" target="gA1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Grandchild A2 -->
-<mxCell id="gA2" value="A2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9daf8;strokeColor=#3d5a80;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="320" y="420" width="220" height="50" as="geometry"/></mxCell>
-<mxCell id="eA2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="cA" target="gA2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Grandchild C1 -->
-<mxCell id="gC1" value="C1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9daf8;strokeColor=#3d5a80;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="1060" y="420" width="220" height="50" as="geometry"/></mxCell>
-<mxCell id="eC1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="cC" target="gC1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-<!-- Grandchild C2 -->
-<mxCell id="gC2" value="C2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9daf8;strokeColor=#3d5a80;fontSize=11;verticalAlign=top;spacingTop=5;spacingLeft=8;" vertex="1" parent="1"><mxGeometry x="1300" y="420" width="220" height="50" as="geometry"/></mxCell>
-<mxCell id="eC2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;" edge="1" source="cC" target="gC2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-```
-Level spacing: 160px vertical. Sibling spacing: ~240–490px horizontal depending on count.
-
-Pick the closest template, then adapt: rename labels, add/remove nodes, adjust y-values. This is **much faster** than computing every coordinate from scratch.
-
-### Validate Before Saving
-After writing the file, always run:
-```bash
-xmllint --noout <filename>.drawio && echo "Valid XML" || echo "XML ERROR"
-```
-
-If validation fails: fix the XML, do not proceed to rendering.
-
-### Pre-Delivery Checklist
-Before proceeding to Phase 3, verify:
-- [ ] Valid XML (passes `xmllint --noout`)
-- [ ] All `mxCell` elements have `parent="1"`
-- [ ] All nodes have `vertex="1"`, all edges have `edge="1"`
-- [ ] Every edge has valid `source` and `target` IDs that exist in the file
-- [ ] No orphaned cells (everything connected)
-- [ ] Styles match STYLE-REFERENCE.md for all element types used
-- [ ] All elements from the requirements are present
+Only edit the `.drawio` XML directly during **Ralph Loop refinement iterations** (Phase 4). For the initial generation, always use the JSON → script approach. When editing XML during refinement, read [scripts/config.json](scripts/config.json) directly for style strings — it is the single source of truth for all styles.
 
 ---
 
 ## Phase 3 — Render to PNG
 
-Run the render script (`scripts/render_drawio.py` relative to this skill's directory):
+**Always edit `<filename>.drawio`** (the working copy with `file:///` icon URIs). Before each render, embed icons into a temporary copy so drawio can resolve them.
+
+### Render command (with icons)
+```bash
+python3 ~/.claude/skills/drawio/scripts/embed_icons.py <filename>.drawio --output <filename>.render.drawio && python3 ~/.claude/skills/drawio/scripts/render_drawio.py <filename>.render.drawio --output <filename>.png && rm -f <filename>.render.drawio
+```
+
+### Render command (no icons)
 ```bash
 python3 ~/.claude/skills/drawio/scripts/render_drawio.py <filename>.drawio
 ```
+
+### Render quality
+The renderer defaults to `--scale 2` (2× resolution) and `--border 20` for crisp output with padding. Override if needed:
+```bash
+python3 ~/.claude/skills/drawio/scripts/render_drawio.py <filename>.drawio --scale 3 --border 40
+```
+
+### Render timing
+Renders take 10–20s (Electron cold-start). The critique depends on the rendered PNG, so you must wait for the render to complete before critiquing. Do **not** try to parallelise rendering — each iteration's XML depends on the previous critique.
+
+**Never edit the `.render.drawio` file** — always edit the original.
 
 **If rendering fails:** Deliver the `.drawio` XML file to the user and inform them:
 > "Rendering failed. The `.drawio` file is ready — open it at [app.diagrams.net](https://app.diagrams.net) or in the draw.io desktop app."
@@ -289,17 +240,19 @@ Briefly describe what you see in the rendered diagram before entering Phase 4.
 
 ---
 
-## Phase 4 — Ralph Loop: 5 Refinement Iterations
+## Phase 4 — Ralph Loop: Refinement Iterations
+
+Default: **3 iterations**. The user can override by passing `--max-iterations N` with their `/drawio` command (e.g. `/drawio ... --max-iterations 5`). If not specified, use 3.
 
 Invoke the ralph-loop skill to begin iterative refinement.
 
-**REQUIRED:** Use the `ralph-loop:ralph-loop` skill now with arguments. Pass the diagram filename as the prompt and set `--max-iterations 5`:
+**REQUIRED:** Use the `ralph-loop:ralph-loop` skill now with arguments. Pass the diagram filename as the prompt and set `--max-iterations` to the chosen count:
 ```
 Skill: ralph-loop:ralph-loop
-Args: Refine <filename>.drawio diagram --max-iterations 5
+Args: Refine <filename>.drawio diagram --max-iterations <N>
 ```
 
-For each of the 5 iterations, follow this structure:
+For each iteration, follow this structure:
 
 ### Iteration Critique
 
@@ -307,14 +260,14 @@ Read [references/CRITIQUE-TEMPLATE.md](references/CRITIQUE-TEMPLATE.md) and crit
 
 ### After Critique
 List the specific changes you will make, then:
-1. Edit the `.drawio` file to implement all improvements
+1. Edit the `.drawio` file (the working copy with `file:///` paths) to implement all improvements
 2. Validate: `xmllint --noout <filename>.drawio`
    - If validation fails: revert the edit (restore the previous valid XML), make a more targeted fix, and re-validate before proceeding. Do not render broken XML.
-3. Re-render: `python3 ~/.claude/skills/drawio/scripts/render_drawio.py <filename>.drawio`
+3. Re-render using the embed-then-render pattern from Phase 3
 4. Read the new PNG as a screenshot
-5. State: *"Iteration N/5 complete. Changes made: [summary]"*
+5. State: *"Iteration N/<max> complete. Changes made: [summary]"*
 
-### After 5 Iterations
+### After All Iterations
 Cancel the Ralph Loop using `ralph-loop:cancel-ralph`.
 
 ### Final Adjustments
@@ -323,26 +276,23 @@ Ask the user: *"Would you like any final adjustments before I package the diagra
 
 If the user requests changes, make them, re-validate, and re-render. Repeat until the user confirms they're happy.
 
-### Embed Icons for Portability
+### Package Final Deliverable
 
-Once the user is satisfied, embed all `file:///` icon URIs as base64 so the diagram is self-contained when shared:
+Once the user is satisfied, embed icons into the final `.drawio` so it's portable:
 ```bash
 python3 ~/.claude/skills/drawio/scripts/embed_icons.py <filename>.drawio
+xmllint --noout <filename>.drawio && echo "Valid XML" || echo "XML ERROR"
 ```
-This creates a `.drawio.bak` backup and modifies the file in place. Validate after: `xmllint --noout <filename>.drawio`
-
-Optionally rename the final PNG for clarity:
-```bash
-cp <filename>.png <filename>-final.png
-```
+This creates a `.drawio.bak` backup (the working copy with `file:///` paths) and embeds base64 icons in place. If no icons were used, skip the embed step.
 
 Present the final output:
 ```
 Diagram complete.
 
 Files:
-  <filename>.drawio   — draw.io source file (icons embedded, portable)
-  <filename>.png      — rendered PNG
+  <filename>.drawio       — draw.io source file (icons embedded, portable)
+  <filename>.drawio.bak   — working copy with file:/// paths (if icons were used)
+  <filename>.png          — rendered PNG
 
 Open <filename>.drawio in draw.io (app.diagrams.net) to view and edit interactively.
 ```
