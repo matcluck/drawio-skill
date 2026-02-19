@@ -101,7 +101,7 @@
 
     "group": "rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fontColor=#475569;fontFamily=Helvetica;verticalAlign=top;spacingTop=10;fillColor=#F8FAFC;opacity=50;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;dashPattern=6 4;arcSize=12;shadow=0;",
 
-    "icon_base": "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;html=1;fontSize=11;fontColor=#1E293B;fontFamily=Helvetica;"
+    "icon_base": "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=1;html=1;fontSize=11;fontColor=#1E293B;fontFamily=Helvetica;"
   },
 
   "dark": {
@@ -128,11 +128,11 @@
       "process_secondary": "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#064E3B;strokeColor=#10B981;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
       "process_accent":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#4C1D95;strokeColor=#8B5CF6;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
       "process_warning":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#78350F;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
-      "process_danger":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#881337;strokeColor=#F43F5E;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
+      "process_danger":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#7F1D1D;strokeColor=#F43F5E;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
       "process_neutral":   "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#334155;strokeColor=#64748B;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontStyle=0;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
 
       "decision": "shape=rhombus;whiteSpace=wrap;html=1;rounded=1;fillColor=#78350F;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=13;fontColor=#E2E8F0;fontFamily=Helvetica;shadow=0;",
-      "note":     "shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#713F12;strokeColor=#EAB308;strokeWidth=1;fontSize=11;fontColor=#CBD5E1;fontFamily=Helvetica;verticalAlign=middle;shadow=0;",
+      "note":     "shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#78350F;strokeColor=#EAB308;strokeWidth=1;fontSize=11;fontColor=#CBD5E1;fontFamily=Helvetica;verticalAlign=middle;shadow=0;",
 
       "dark_panel": "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#0F172A;strokeColor=#475569;strokeWidth=1.5;fontSize=12;fontColor=#E2E8F0;fontFamily=Courier New;verticalAlign=middle;align=center;shadow=0;",
       "success":    "rounded=1;whiteSpace=wrap;html=1;arcSize=24;fillColor=#064E3B;strokeColor=#10B981;strokeWidth=1.5;fontSize=13;fontStyle=1;fontColor=#D1FAE5;fontFamily=Helvetica;verticalAlign=middle;align=center;shadow=0;",
@@ -155,7 +155,7 @@
 
       "group": "rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fontColor=#94A3B8;fontFamily=Helvetica;verticalAlign=top;spacingTop=10;fillColor=#1E293B;opacity=50;strokeColor=#475569;strokeWidth=1.5;dashed=1;dashPattern=6 4;arcSize=12;shadow=0;",
 
-      "icon_base": "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;aspect=fixed;imageAspect=0;html=1;fontSize=11;fontColor=#E2E8F0;fontFamily=Helvetica;"
+      "icon_base": "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;aspect=fixed;imageAspect=1;html=1;fontSize=11;fontColor=#E2E8F0;fontFamily=Helvetica;"
     }
   }
 }

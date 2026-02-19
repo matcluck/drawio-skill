@@ -16,7 +16,7 @@ JSON schema:
 {
   "title": "Diagram Title",
   "subtitle": "Optional subtitle text",
-  "layout": "linear" | "horizontal" | "branching" | "hierarchical" | "swimlane" | "grid",
+  "layout": "linear" | "horizontal" | "branching" | "hierarchical" | "swimlane" | "grid" | "rows" | "flow" | "pipeline",
   "nodes": [
     {
       "id": "unique-id",
@@ -26,7 +26,8 @@ JSON schema:
       "detail": "optional subtitle text",
       "icon": "file:///absolute/path/to/icon.png",
       "variant": "primary" | "secondary" | "accent" | "warning" | "danger" | "neutral",
-      "lane": "lane-id (swimlane layout only)"
+      "lane": "lane-id (swimlane layout only)",
+      "row": "1 (rows layout only — nodes sharing a row value appear side-by-side)"
     }
   ],
   "edges": [
@@ -53,11 +54,21 @@ JSON schema:
       "color": "#hex (optional)"
     }
   ],
-  "grid_columns": 3
+  "grid_columns": 3,
+  "flow_columns": 3,
+  "pipeline": ["node-id-1", ["node-id-2", "node-id-3"], "node-id-4"]
 }
+
+pipeline layout:
+  Top-level "pipeline" array. Each entry is a node ID (single step) or list of node IDs
+  (vertical stack at that step). Flow runs left-to-right; stacks grow top-to-bottom.
+  Example: ["n1", ["n2", "n3", "n4", "n5"], "n6"]
+  →  n1 alone → n2/n3/n4/n5 stacked → n6 alone  (horizontal flow, step 2 is a column)
 """
 import argparse
 import json
+import math
+import re
 import sys
 import uuid
 from collections import defaultdict
@@ -134,7 +145,6 @@ def get_edge_style(edge: dict) -> str:
     base = STYLES[style_key]
     if color and color in EDGE_COLORS:
         # Override strokeColor — remove existing one first, then append
-        import re
         base = re.sub(r"strokeColor=#[0-9A-Fa-f]+;", "", base)
         base += f"strokeColor={EDGE_COLORS[color]};"
     return base
@@ -398,6 +408,162 @@ def layout_swimlane(nodes: list[dict], edges: list[dict], data: dict = None) -> 
     return positions
 
 
+def layout_rows(nodes: list[dict], edges: list[dict], data: dict = None) -> dict[str, tuple[int, int]]:
+    """Place nodes into explicit rows defined by each node's 'row' field.
+
+    Nodes sharing the same 'row' value appear side-by-side (left-to-right),
+    centred on the canvas. Row groups stack top-to-bottom. The LLM controls
+    grouping semantically — parallel steps share a row, sequential steps use
+    different rows. Nodes without a 'row' field each occupy their own row.
+    """
+    data = data or {}
+    content_top = get_content_top(data)
+
+    # Group nodes by row, preserving first-occurrence order
+    row_order = []
+    by_row = defaultdict(list)
+    seen_rows = set()
+
+    for i, node in enumerate(nodes):
+        row_key = node.get("row", f"_auto_{i}")
+        if row_key not in seen_rows:
+            row_order.append(row_key)
+            seen_rows.add(row_key)
+        by_row[row_key].append(node)
+
+    positions = {}
+    y = content_top
+
+    for row_key in row_order:
+        row_nodes = by_row[row_key]
+        max_h = max((get_dims(n)[1] for n in row_nodes), default=56)
+
+        total_w = sum(get_dims(n)[0] for n in row_nodes) + H_GAP * (len(row_nodes) - 1)
+        start_x = max(CONTENT_LEFT, (PAGE_WIDTH - total_w) // 2)
+
+        x = start_x
+        for node in row_nodes:
+            w, h = get_dims(node)
+            node_y = y + (max_h - h) // 2  # vertically centre within row
+            positions[node["id"]] = (x, node_y)
+            x += w + H_GAP
+
+        y += max_h + MIN_EDGE_GAP
+
+    return positions
+
+
+def layout_flow(nodes: list[dict], edges: list[dict], data: dict = None) -> dict[str, tuple[int, int]]:
+    """Wrap nodes into rows (left-to-right, then down). Screen-friendly for long sequences.
+
+    Targets ~16:9 aspect ratio by default. Override with 'flow_columns' in the JSON.
+    """
+    data = data or {}
+    content_top = get_content_top(data)
+
+    n = len(nodes)
+    cols = data.get("flow_columns")
+    if not cols:
+        # Auto-calculate: target ~16:9 (cols ≈ sqrt(n * 16/9))
+        cols = max(2, min(n, round(math.sqrt(n * 16 / 9))))
+
+    positions = {}
+    y = content_top
+
+    for row_start in range(0, n, cols):
+        row_nodes = nodes[row_start:row_start + cols]
+        max_h = max((get_dims(nd)[1] for nd in row_nodes), default=56)
+
+        total_w = sum(get_dims(nd)[0] for nd in row_nodes) + H_GAP * (len(row_nodes) - 1)
+        start_x = max(CONTENT_LEFT, (PAGE_WIDTH - total_w) // 2)
+
+        x = start_x
+        for node in row_nodes:
+            w, h = get_dims(node)
+            node_y = y + (max_h - h) // 2  # vertically centre within row
+            positions[node["id"]] = (x, node_y)
+            x += w + H_GAP
+
+        y += max_h + MIN_EDGE_GAP
+
+    return positions
+
+
+def layout_pipeline(nodes: list[dict], edges: list[dict], data: dict = None) -> dict[str, tuple[int, int]]:
+    """Horizontal left-to-right flow where each step can be a single node or a vertical stack.
+
+    Requires a top-level 'pipeline' array in the JSON. Each entry is either:
+      - a node ID string  → single node at that step
+      - a list of node IDs → vertical stack of nodes at that step (column)
+
+    All steps are horizontally spaced and the tallest stack determines the vertical
+    midpoint; shorter single nodes are centred on that midpoint.
+
+    Example:
+      "pipeline": ["n1", ["n2", "n3", "n4", "n5"], "n6"]
+      →  n1 alone | n2/n3/n4/n5 stacked | n6 alone
+    """
+    data = data or {}
+    pipeline_spec = data.get("pipeline", [])
+    if not pipeline_spec:
+        # Fallback: treat all nodes as individual pipeline steps
+        pipeline_spec = [n["id"] for n in nodes]
+
+    content_top = get_content_top(data)
+    node_map = {n["id"]: n for n in nodes}
+
+    # Normalise: each step becomes a list of node IDs
+    steps = []
+    for entry in pipeline_spec:
+        if isinstance(entry, list):
+            steps.append(entry)
+        else:
+            steps.append([entry])
+
+    # Compute each step's bounding box: (w, h)
+    # w = max node width in the step; h = sum of heights + gaps between nodes
+    step_dims = []
+    for step_ids in steps:
+        step_nodes = [node_map[nid] for nid in step_ids if nid in node_map]
+        if not step_nodes:
+            step_dims.append((0, 0))
+            continue
+        sw = max(get_dims(n)[0] for n in step_nodes)
+        sh = sum(get_dims(n)[1] for n in step_nodes) + V_GAP * max(len(step_nodes) - 1, 0)
+        step_dims.append((sw, sh))
+
+    # Max total height determines the vertical midpoint for centering single nodes
+    max_total_h = max((h for _, h in step_dims), default=56)
+    mid_y = content_top + max_total_h // 2
+
+    # Centre the entire pipeline horizontally
+    total_pipeline_w = sum(sw for sw, _ in step_dims) + H_GAP * max(len(steps) - 1, 0)
+    start_x = max(CONTENT_LEFT, (PAGE_WIDTH - total_pipeline_w) // 2)
+
+    positions = {}
+    x = start_x
+
+    for step_ids, (sw, sh) in zip(steps, step_dims):
+        step_nodes = [node_map[nid] for nid in step_ids if nid in node_map]
+        if not step_nodes:
+            x += sw + H_GAP
+            continue
+
+        # Vertically centre the stack around mid_y
+        stack_start_y = mid_y - sh // 2
+        sy = stack_start_y
+        for node in step_nodes:
+            nw, nh = get_dims(node)
+            # Horizontally centre narrower nodes within the step width
+            nx = x + (sw - nw) // 2
+            positions[node["id"]] = (nx, sy)
+            sy += nh + V_GAP
+
+        x += sw + H_GAP
+
+    return positions
+
+
 LAYOUTS = {
     "linear": layout_linear,
     "horizontal": layout_horizontal,
@@ -405,6 +571,9 @@ LAYOUTS = {
     "hierarchical": layout_hierarchical,
     "grid": layout_grid,
     "swimlane": layout_swimlane,
+    "flow": layout_flow,
+    "rows": layout_rows,
+    "pipeline": layout_pipeline,
 }
 
 
@@ -504,6 +673,19 @@ def generate_xml(data: dict) -> str:
     diagram_id = str(uuid.uuid4())[:8]
 
     node_map = {n["id"]: n for n in nodes}
+
+    # Build icon label background map: icon nodes use group fill if inside a group,
+    # otherwise use the page background. This prevents a mismatched coloured square
+    # appearing behind icon labels when group fill ≠ page background.
+    _group_style = STYLES.get("group", "")
+    _group_fill_m = re.search(r"fillColor=(#[0-9A-Fa-f]{6})", _group_style)
+    _group_fill = _group_fill_m.group(1) if _group_fill_m else ("#1E293B" if theme == "dark" else "#F8FAFC")
+    _page_bg = bg_color or "#FFFFFF"
+    node_group_fill = {}
+    for _grp in groups:
+        for _mid in _grp.get("members", []):
+            node_group_fill[_mid] = _group_fill
+
     max_y = 0
     max_x = 0
     for nid, (x, y) in positions.items():
@@ -595,6 +777,11 @@ def generate_xml(data: dict) -> str:
     for node in nodes:
         nid = node["id"]
         style = get_node_style(node)
+        # For icon nodes, set labelBackgroundColor to match the actual visual background
+        # at that position (group fill or page bg) to avoid mismatched colour squares.
+        if node.get("type") == "icon":
+            lbg = node_group_fill.get(nid, _page_bg)
+            style = re.sub(r"labelBackgroundColor=[^;]+;", f"labelBackgroundColor={lbg};", style)
         label = build_label(node, detail_color)
         w, h = get_dims(node)
         x, y = positions.get(nid, (100, 100))

@@ -95,6 +95,8 @@ The palette in `config.json` is already harmonized — Tailwind-inspired tints w
 
 **Dark mode:** Invert the model — dark fills with lighter strokes and white text. Use the `dark` section of `config.json` rather than inventing dark equivalents of the light palette.
 
+**Dark mode fill legibility rule:** Every dark fill must have enough chrominance (color saturation) to read as its intended hue against the page background (`#0F172A`). Near-black fills like `#1C1200` or `#1C0010` appear muddy and indistinguishable from the background — warm hues (amber, red) are especially prone to this because near-black warm tones read as "dirty" rather than colored. Target fills where at least one RGB channel is ≥70 (e.g. amber `#78350F` = RGB 120,53,15; red `#7F1D1D` = RGB 127,29,29) so the hue is clearly visible.
+
 ### Harmony rules when picking custom colors
 
 If you need to go outside the built-in palette:
